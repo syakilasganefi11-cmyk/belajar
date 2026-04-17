@@ -1,1 +1,378 @@
-hello world
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulasi Uji Elektrolit</title>
+    <style>
+        /* =========================================
+           BAGIAN CSS (TAMPILAN)
+           ========================================= */
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .simulation-wrapper {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        .title {
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .control-group label {
+            font-weight: bold;
+            margin-right: 10px;
+            color: #34495e;
+        }
+
+        select, button {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #bdc3c7;
+            font-size: 14px;
+        }
+
+        button {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        button.active {
+            background-color: #27ae60;
+        }
+
+        .visual-area {
+            position: relative;
+            height: 350px;
+            margin-bottom: 20px;
+        }
+
+        /* Baterai & Lampu */
+        .circuit-top {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            position: relative;
+            top: 20px;
+        }
+
+        .battery-body {
+            width: 60px;
+            height: 40px;
+            background: #2c3e50;
+            color: white;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .battery-cap {
+            width: 10px;
+            height: 15px;
+            background: #7f8c8d;
+            position: absolute;
+            right: 5px;
+            top: -15px;
+            border-radius: 2px 2px 0 0;
+        }
+
+        .lightbulb-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .bulb {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid #bdc3c7;
+            transition: all 0.3s ease;
+        }
+
+        .bulb.off { background-color: #ecf0f1; }
+        .bulb.dim { background-color: #f1c40f; box-shadow: 0 0 15px #f1c40f; }
+        .bulb.bright { background-color: #fff200; box-shadow: 0 0 40px #fff200, 0 0 80px #fff200; border-color: #fff200; }
+
+        .bulb-base {
+            width: 20px;
+            height: 15px;
+            background: #7f8c8d;
+            border-radius: 0 0 5px 5px;
+        }
+
+        /* Kabel */
+        .wire {
+            background: #e67e22;
+            position: absolute;
+        }
+        .wire-top { width: 40%; height: 4px; top: 38px; left: 30%; z-index: -1;}
+        .wire-left { width: 4px; height: 100px; left: 35%; top: 60px; }
+        .wire-right { width: 4px; height: 100px; right: 35%; top: 60px; }
+
+        /* Gelas Kimia & Elektroda */
+        .beaker-area {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 200px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .electrode {
+            width: 15px;
+            height: 120px;
+            background: #34495e;
+            position: absolute;
+            bottom: 30px;
+            border-radius: 3px;
+            z-index: 2;
+        }
+        .electrode.left { left: 34%; }
+        .electrode.right { right: 34%; }
+
+        .beaker {
+            width: 200px;
+            height: 150px;
+            border: 4px solid #bdc3c7;
+            border-top: none;
+            border-radius: 0 0 20px 20px;
+            position: absolute;
+            bottom: 10px;
+            overflow: hidden;
+        }
+
+        .liquid {
+            width: 100%;
+            height: 80%;
+            background: rgba(52, 152, 219, 0.4);
+            position: absolute;
+            bottom: 0;
+            z-index: 1;
+        }
+
+        /* Gelembung */
+        #bubbles-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .bubble {
+            position: absolute;
+            bottom: 0;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.8;
+            animation: rise 2s infinite ease-in;
+        }
+
+        @keyframes rise {
+            0% { transform: translateY(0) scale(1); opacity: 0.8; }
+            100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
+        }
+
+        .info-panel {
+            background: #e8f4f8;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 5px solid #3498db;
+            text-align: left;
+        }
+
+        .info-panel h3 { margin-top: 0; color: #2980b9; }
+        .info-panel p { margin: 0; color: #34495e; line-height: 1.5; }
+    </style>
+</head>
+<body>
+
+    <div class="simulation-wrapper">
+        <h2 class="title">Uji Daya Hantar Listrik Larutan</h2>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="solutionSelect">Pilih Jenis Larutan:</label>
+                <select id="solutionSelect" onchange="resetSimulation()">
+                    <option value="kuat">Larutan Elektrolit Kuat</option>
+                    <option value="lemah">Larutan Elektrolit Lemah</option>
+                    <option value="nonelektrolit">Larutan Non-Elektrolit</option>
+                </select>
+            </div>
+            <button id="switchBtn" onclick="toggleSwitch()">Tutup Saklar (ON)</button>
+        </div>
+
+        <div class="visual-area">
+            <div class="circuit-top">
+                <div class="battery">
+                    <div class="battery-cap"></div>
+                    <div class="battery-body">Baterai 9V</div>
+                </div>
+                <div class="wire wire-top"></div>
+                <div class="lightbulb-container">
+                    <div id="lightbulb" class="bulb off"></div>
+                    <div class="bulb-base"></div>
+                </div>
+            </div>
+
+            <div class="beaker-area">
+                <div class="wire wire-left"></div>
+                <div class="wire wire-right"></div>
+                
+                <div class="electrode left"></div>
+                <div class="electrode right"></div>
+                
+                <div class="beaker">
+                    <div class="liquid" id="liquid">
+                        <div id="bubbles-container"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <h3>Apa yang terjadi?</h3>
+            <p id="explanationText">Pilih jenis larutan di atas, lalu tekan tombol <strong>"Tutup Saklar"</strong> untuk memulai pengamatan.</p>
+        </div>
+    </div>
+
+    <script>
+        let isSwitchedOn = false;
+        let bubbleInterval;
+
+        function toggleSwitch() {
+            const btn = document.getElementById("switchBtn");
+            isSwitchedOn = !isSwitchedOn;
+
+            if (isSwitchedOn) {
+                btn.textContent = "Buka Saklar (OFF)";
+                btn.classList.add("active");
+                runSimulation();
+            } else {
+                btn.textContent = "Tutup Saklar (ON)";
+                btn.classList.remove("active");
+                stopSimulation();
+            }
+        }
+
+        function resetSimulation() {
+            isSwitchedOn = false;
+            const btn = document.getElementById("switchBtn");
+            btn.textContent = "Tutup Saklar (ON)";
+            btn.classList.remove("active");
+            stopSimulation();
+            
+            document.getElementById("explanationText").innerHTML = "Jenis larutan telah diubah. Silakan tekan <strong>'Tutup Saklar'</strong> untuk memulai pengujian baru.";
+        }
+
+        function runSimulation() {
+            const solution = document.getElementById("solutionSelect").value;
+            const bulb = document.getElementById("lightbulb");
+            const explanation = document.getElementById("explanationText");
+
+            // Reset lampu terlebih dahulu
+            bulb.className = "bulb"; 
+
+            if (solution === "kuat") {
+                bulb.classList.add("bright");
+                generateBubbles(15); // Banyak gelembung
+                explanation.innerHTML = "<strong>Elektrolit Kuat:</strong> Lampu menyala <strong>terang</strong> dan terdapat <strong>banyak gelembung gas</strong>. Zat terlarut terionisasi sempurna (α = 1) di dalam air, menghasilkan banyak ion yang bergerak bebas untuk menghantarkan arus listrik secara optimal.";
+            } 
+            else if (solution === "lemah") {
+                bulb.classList.add("dim");
+                generateBubbles(3); // Sedikit gelembung
+                explanation.innerHTML = "<strong>Elektrolit Lemah:</strong> Lampu menyala <strong>redup</strong> (atau mati) dan terdapat <strong>sedikit gelembung gas</strong>. Zat terlarut hanya terionisasi sebagian (0 < α < 1), sehingga jumlah ion bebas yang tersedia untuk menghantarkan arus listrik sangat terbatas.";
+            } 
+            else if (solution === "nonelektrolit") {
+                bulb.classList.add("off");
+                generateBubbles(0); // Tidak ada gelembung
+                explanation.innerHTML = "<strong>Non-Elektrolit:</strong> Lampu <strong>tidak menyala</strong> dan <strong>tidak ada gelembung gas</strong>. Zat terlarut tetap sebagai molekul utuh dan tidak menghasilkan ion bebas (α = 0), sehingga tidak ada media yang dapat menghantarkan arus listrik.";
+            }
+        }
+
+        function stopSimulation() {
+            const bulb = document.getElementById("lightbulb");
+            bulb.className = "bulb off"; // Matikan lampu
+            clearInterval(bubbleInterval); // Hentikan produksi gelembung
+            document.getElementById("bubbles-container").innerHTML = ""; // Bersihkan gelembung yang tersisa
+            document.getElementById("explanationText").innerHTML = "Saklar dalam keadaan terbuka. Rangkaian terputus sehingga tidak ada arus listrik yang mengalir ke dalam sistem.";
+        }
+
+        function generateBubbles(amount) {
+            clearInterval(bubbleInterval);
+            const container = document.getElementById("bubbles-container");
+            container.innerHTML = "";
+
+            if (amount === 0) return;
+
+            bubbleInterval = setInterval(() => {
+                // Buat gelembung di elektroda kiri
+                createBubble("32%"); 
+                // Buat gelembung di elektroda kanan
+                createBubble("63%"); 
+            }, 1000 / amount); // Kecepatan munculnya gelembung berdasarkan amount
+        }
+
+        function createBubble(leftPosition) {
+            const container = document.getElementById("bubbles-container");
+            const bubble = document.createElement("div");
+            bubble.classList.add("bubble");
+            
+            // Ukuran dan posisi acak kecil agar terlihat natural
+            const size = Math.random() * 6 + 4; // 4px - 10px
+            bubble.style.width = size + "px";
+            bubble.style.height = size + "px";
+            
+            // Sedikit menyebar di sekitar elektroda
+            const offset = (Math.random() - 0.5) * 15; 
+            bubble.style.left = `calc(${leftPosition} + ${offset}px)`;
+            
+            // Variasi kecepatan naik
+            bubble.style.animationDuration = (Math.random() * 1 + 1.5) + "s";
+            
+            container.appendChild(bubble);
+
+            // Hapus gelembung setelah animasi selesai agar memori tidak penuh
+            setTimeout(() => {
+                bubble.remove();
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
